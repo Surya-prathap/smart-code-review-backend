@@ -22,7 +22,16 @@ public class CodeReviewService {
         Matcher matcher = pattern.matcher(code);
 
         boolean methodNamingRuleViolated = false;
+        boolean printStatementRuleViolated = false;
+
         int score = 100;
+
+        if (code.contains("System.out.println")){
+            printStatementRuleViolated = true;
+            issues.add("Use of System.out.println detected");
+            suggestions.add("Use a logging framework instead of System.out.println");
+        }
+
         while (matcher.find()){
             String methodName = matcher.group(1);
                 if (methodName.length() < 3){
@@ -35,6 +44,10 @@ public class CodeReviewService {
         if (methodNamingRuleViolated){
             score -= 10;
         }
+        if (printStatementRuleViolated){
+            score -= 10;
+        }
+
         String complexityLevel = "";
         if (issues.isEmpty()){
             complexityLevel = "Easy";
