@@ -21,6 +21,8 @@ public class CodeReviewService {
         boolean methodNamingRuleViolated = false;
         boolean printStatementRuleViolated = false;
         boolean emptyCatchRuleViolated = false;
+        boolean todoCommentRuleViolated = false;
+        boolean longMethodRuleViolated = false;
 
         Pattern pattern = Pattern.compile("(\\w+)\\(");
         Matcher matcher = pattern.matcher(code);
@@ -52,6 +54,19 @@ public class CodeReviewService {
             suggestions.add("Handle the exception or log it properly");
         }
 
+        if (code.contains("TODO")){
+            todoCommentRuleViolated = true;
+            issues.add("TODO comment found");
+            suggestions.add("Complete the implementation or remove todo comment");
+        }
+
+        String[] lines = code.split("\n");
+        if (lines.length > 20){
+            longMethodRuleViolated = true;
+            issues.add("Method is too long");
+            suggestions.add("Break the method into smaller methods");
+        }
+
         if (methodNamingRuleViolated){
             score -= 10;
         }
@@ -59,6 +74,12 @@ public class CodeReviewService {
             score -= 10;
         }
         if (emptyCatchRuleViolated){
+            score -= 10;
+        }
+        if (todoCommentRuleViolated){
+            score -= 10;
+        }
+        if (longMethodRuleViolated){
             score -= 10;
         }
 
