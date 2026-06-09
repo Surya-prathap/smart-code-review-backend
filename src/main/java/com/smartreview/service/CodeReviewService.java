@@ -18,19 +18,18 @@ public class CodeReviewService {
         List<String> issues = new ArrayList<>();
         List<String> suggestions = new ArrayList<>();
 
+        boolean methodNamingRuleViolated = false;
+        boolean printStatementRuleViolated = false;
+        boolean emptyCatchRuleViolated = false;
+
         Pattern pattern = Pattern.compile("(\\w+)\\(");
         Matcher matcher = pattern.matcher(code);
 
-        boolean methodNamingRuleViolated = false;
-        boolean printStatementRuleViolated = false;
+        Pattern catchPattern = Pattern.compile("catch\\s*\\([^)]*\\)\\s*\\{\\s*\\}");
+        Matcher catchMatcher = catchPattern.matcher(code);
+
 
         int score = 100;
-
-        if (code.contains("System.out.println")){
-            printStatementRuleViolated = true;
-            issues.add("Use of System.out.println detected");
-            suggestions.add("Use a logging framework instead of System.out.println");
-        }
 
         while (matcher.find()){
             String methodName = matcher.group(1);
@@ -41,10 +40,25 @@ public class CodeReviewService {
                 }
         }
 
+        if (code.contains("System.out.println")){
+            printStatementRuleViolated = true;
+            issues.add("Use of System.out.println detected");
+            suggestions.add("Use a logging framework instead of System.out.println");
+        }
+
+        while (catchMatcher.find()){
+            emptyCatchRuleViolated = true;
+            issues.add("Empty catch block detected");
+            suggestions.add("Handle the exception or log it properly");
+        }
+
         if (methodNamingRuleViolated){
             score -= 10;
         }
         if (printStatementRuleViolated){
+            score -= 10;
+        }
+        if (emptyCatchRuleViolated){
             score -= 10;
         }
 
