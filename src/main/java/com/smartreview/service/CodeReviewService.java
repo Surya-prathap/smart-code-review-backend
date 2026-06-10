@@ -38,6 +38,9 @@ public class CodeReviewService {
         if (checkLongMethods(code,issues,suggestions)){
             violatedRulesCount++;
         }
+        if (checkTooManyParameters(code,issues,suggestions)){
+            violatedRulesCount++;
+        }
 
         score -= (violatedRulesCount * 10);
 
@@ -119,6 +122,23 @@ public class CodeReviewService {
             violated = true;
             issues.add("Method is too long");
             suggestions.add("Break the method into smaller methods");
+        }
+        return violated;
+    }
+
+    private boolean checkTooManyParameters(String code,List<String> issues,List<String> suggestions){
+        boolean violated = false;
+        Pattern parameterPattern = Pattern.compile("\\w+\\s*\\((\\s*[^)]*\\s*)");
+        Matcher parameterMatcher = parameterPattern.matcher(code);
+
+        while (parameterMatcher.find()){
+            String parameters = parameterMatcher.group(1);
+            String[] parameterNames = parameters.split(",");
+            if (parameterNames.length > 4){
+                violated = true;
+                issues.add("Method has too many parameters");
+                suggestions.add("Consider using DTO or wrapper object");
+            }
         }
         return violated;
     }
