@@ -21,34 +21,25 @@ public class CodeReviewService {
         List<String> suggestions = new ArrayList<>();
 
         int score = 100;
+        int violatedRulesCount = 0;
 
-        boolean methodNamingRuleViolated = false;
-        boolean printStatementRuleViolated = false;
-        boolean emptyCatchRuleViolated = false;
-        boolean todoCommentRuleViolated = false;
-        boolean longMethodRuleViolated = false;
+        if (checkMethodNamingRule(code,issues,suggestions)){
+            violatedRulesCount++;
+        }
+        if (checkPrintStatement(code,issues,suggestions)){
+            violatedRulesCount++;
+        }
+        if (checkEmptyCatchBlocks(code,issues,suggestions)){
+            violatedRulesCount++;
+        }
+        if (checkTodoComments(code,issues,suggestions)){
+            violatedRulesCount++;
+        }
+        if (checkLongMethods(code,issues,suggestions)){
+            violatedRulesCount++;
+        }
 
-        methodNamingRuleViolated = checkMethodNamingRule(code,issues,suggestions);
-        printStatementRuleViolated = checkPrintStatement(code,issues,suggestions);
-        emptyCatchRuleViolated = checkEmptyCatchBlocks(code,issues,suggestions);
-        todoCommentRuleViolated = checkTodoComments(code,issues,suggestions);
-        longMethodRuleViolated = checkLongMethods(code,issues,suggestions);
-
-        if (methodNamingRuleViolated){
-            score -= 10;
-        }
-        if (printStatementRuleViolated){
-            score -= 10;
-        }
-        if (emptyCatchRuleViolated){
-            score -= 10;
-        }
-        if (todoCommentRuleViolated){
-            score -= 10;
-        }
-        if (longMethodRuleViolated){
-            score -= 10;
-        }
+        score -= (violatedRulesCount * 10);
 
         String complexityLevel = "";
         if (issues.isEmpty()){
