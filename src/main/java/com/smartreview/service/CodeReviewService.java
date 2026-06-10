@@ -1,8 +1,10 @@
 package com.smartreview.service;
 
+import com.smartreview.dto.IssueDTO;
 import com.smartreview.dto.RequestDTO;
 import com.smartreview.dto.ResponseDTO;
-import lombok.RequiredArgsConstructor;
+import com.smartreview.enums.RuleType;
+import com.smartreview.enums.Severity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -17,37 +19,36 @@ public class CodeReviewService {
     public ResponseDTO analyseCode(RequestDTO requestDTO){
 
         String code = requestDTO.getCode();
-        List<String> issues = new ArrayList<>();
-        List<String> suggestions = new ArrayList<>();
+        List<IssueDTO> issuesList = new ArrayList<>();
 
         int score = 100;
         int violatedRulesCount = 0;
 
-        if (checkMethodNamingRule(code,issues,suggestions)){
+        if (checkMethodNamingRule(code,issuesList)){
             violatedRulesCount++;
         }
-        if (checkPrintStatement(code,issues,suggestions)){
+        if (checkPrintStatement(code,issuesList)){
             violatedRulesCount++;
         }
-        if (checkEmptyCatchBlocks(code,issues,suggestions)){
+        if (checkEmptyCatchBlocks(code,issuesList)){
             violatedRulesCount++;
         }
-        if (checkTodoComments(code,issues,suggestions)){
+        if (checkTodoComments(code,issuesList)){
             violatedRulesCount++;
         }
-        if (checkLongMethods(code,issues,suggestions)){
+        if (checkLongMethods(code,issuesList)){
             violatedRulesCount++;
         }
-        if (checkTooManyParameters(code,issues,suggestions)){
+        if (checkTooManyParameters(code,issuesList)){
             violatedRulesCount++;
         }
 
         score -= (violatedRulesCount * 10);
 
         String complexityLevel = "";
-        if (issues.isEmpty()){
+        if (issuesList.isEmpty()){
             complexityLevel = "Easy";
-        } else if (issues.size() <= 3) {
+        } else if (issuesList.size() <= 3) {
             complexityLevel = "Medium";
         } else {
             complexityLevel = "Hard";
@@ -56,16 +57,15 @@ public class CodeReviewService {
         ResponseDTO responseDTO = new ResponseDTO();
 
         responseDTO.setScore(score);
-        responseDTO.setIssues(issues);
-        responseDTO.setSuggestions(suggestions);
-        responseDTO.setNumberOfIssues(issues.size());
+        responseDTO.setIssues(issuesList);
+        responseDTO.setNumberOfIssues(issuesList.size());
         responseDTO.setComplexityLevel(complexityLevel);
         responseDTO.setReviewDate(LocalDate.now());
 
         return responseDTO;
     }
 
-    private boolean checkMethodNamingRule(String code,List<String> issues,List<String> suggestions){
+    private boolean checkMethodNamingRule(String code,List<IssueDTO> issuesList){
 
         boolean violated = false;
         Pattern pattern = Pattern.compile("(\\w+)\\(");
@@ -75,58 +75,53 @@ public class CodeReviewService {
             String methodName = matcher.group(1);
             if (methodName.length() < 3){
                 violated = true;
-                issues.add("Method '" + methodName + "' is too short");
-                suggestions.add("Use a meaningful method instead of " + methodName);
+                addIssue(issuesList,RuleType.METHOD_NAMING,"Method name '" +  methodName + "' is too short","Use a meaningful method instead of " + methodName,Severity.LOW);
             }
         }
         return violated;
     }
 
-    private boolean checkPrintStatement(String code,List<String> issues,List<String> suggestions){
+    private boolean checkPrintStatement(String code,List<IssueDTO> issuesList){
         boolean violated = false;
         if (code.contains("System.out.println")){
             violated = true;
-            issues.add("Use of System.out.println detected");
-            suggestions.add("Use a logging framework instead of System.out.println");
+            addIssue(issuesList,RuleType.PRINT_STATEMENT,"Use of System.out.println detected","Use a logging framework instead of System.out.println",Severity.LOW);
         }
         return violated;
     }
 
-    private boolean checkEmptyCatchBlocks(String code,List<String> issues,List<String> suggestions){
+    private boolean checkEmptyCatchBlocks(String code,List<IssueDTO> issuesList){
         boolean violated = false;
         Pattern catchPattern = Pattern.compile("catch\\s*\\([^)]*\\)\\s*\\{\\s*\\}");
         Matcher catchMatcher = catchPattern.matcher(code);
 
         while (catchMatcher.find()){
             violated = true;
-            issues.add("Empty catch block detected");
-            suggestions.add("Handle the exception or log it properly");
+            addIssue(issuesList,RuleType.EMPTY_CATCH_BLOCK,"Empty catch block detected","Handle the exception or log it properly",Severity.HIGH);
         }
         return violated;
     }
 
-    private boolean checkTodoComments(String code,List<String> issues,List<String> suggestions){
+    private boolean checkTodoComments(String code,List<IssueDTO> issuesList){
         boolean violated = false;
         if (code.contains("TODO")){
             violated = true;
-            issues.add("TODO comment found");
-            suggestions.add("Complete the implementation or remove todo comment");
+            addIssue(issuesList,RuleType.TODO_COMMENT,"TODO comment found","Complete the implementation or remove todo comment",Severity.LOW);
         }
         return violated;
     }
 
-    private boolean checkLongMethods(String code,List<String> issues,List<String> suggestions){
+    private boolean checkLongMethods(String code,List<IssueDTO> issuesList){
         boolean violated = false;
         String[] lines = code.split("\n");
         if (lines.length > 20){
             violated = true;
-            issues.add("Method is too long");
-            suggestions.add("Break the method into smaller methods");
+            addIssue(issuesList,RuleType.LONG_METHOD,"Method is too long","Break the method into smaller methods",Severity.MEDIUM);
         }
         return violated;
     }
 
-    private boolean checkTooManyParameters(String code,List<String> issues,List<String> suggestions){
+    private boolean checkTooManyParameters(String code,List<IssueDTO> issuesList){
         boolean violated = false;
         Pattern parameterPattern = Pattern.compile("\\w+\\s*\\((\\s*[^)]*\\s*)");
         Matcher parameterMatcher = parameterPattern.matcher(code);
@@ -136,11 +131,19 @@ public class CodeReviewService {
             String[] parameterNames = parameters.split(",");
             if (parameterNames.length > 4){
                 violated = true;
-                issues.add("Method has too many parameters");
-                suggestions.add("Consider using DTO or wrapper object");
+                addIssue(issuesList,RuleType.TOO_MANY_PARAMETERS,"Method has too many parameters","Consider using DTO or wrapper object",Severity.MEDIUM);
             }
         }
         return violated;
+    }
+
+    private void addIssue(List<IssueDTO> issuesList, RuleType rule, String message, String suggestion, Severity severity){
+        IssueDTO issueDTO = new IssueDTO();
+        issueDTO.setRule(rule);
+        issueDTO.setMessage(message);
+        issueDTO.setSuggestion(suggestion);
+        issueDTO.setSeverity(severity);
+        issuesList.add(issueDTO);
     }
 
 }

@@ -12,8 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ResponseDTO {
     private int score;
-    private List<String> issues;
-    private List<String> suggestions;
+    private List<IssueDTO> issues;
     private int numberOfIssues;
     private String complexityLevel;
     private LocalDate reviewDate;
