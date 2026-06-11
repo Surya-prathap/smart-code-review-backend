@@ -1,6 +1,7 @@
 package com.smartreview.pmd;
 
 import com.smartreview.dto.IssueDTO;
+import com.smartreview.enums.RuleType;
 import com.smartreview.enums.Severity;
 import net.sourceforge.pmd.PmdAnalysis;
 import net.sourceforge.pmd.lang.document.TextFile;
@@ -23,7 +24,6 @@ import static net.sourceforge.pmd.lang.LanguageRegistry.PMD;
 public class PMDAnalysisService {
 
     public List<IssueDTO> analyzeWithPMD(String code) throws IOException {
-        System.out.println("PMD Method Called");
         List<IssueDTO> issuesList = new ArrayList<>();
 
         PMDConfiguration pmdConfiguration = new PMDConfiguration();
@@ -43,7 +43,6 @@ public class PMDAnalysisService {
                 return new FileAnalysisListener() {
                     @Override
                     public void onRuleViolation(RuleViolation ruleViolation) {
-                        System.out.println("Violation Found: " + ruleViolation.getRule().getName());
                         addPMDIssue(issuesList,ruleViolation);
                     }
                 };
@@ -58,16 +57,30 @@ public class PMDAnalysisService {
         pmdAnalysis.addListener(listener);
         pmdAnalysis.performAnalysis();
 
-        System.out.println("PMD Issues Found: " + issuesList.size());
-
         return issuesList;
     }
 
     private void addPMDIssue(List<IssueDTO> issuesList, RuleViolation ruleViolation){
         IssueDTO issueDTO = new IssueDTO();
-        issueDTO.setRuleName(ruleViolation.getRule().getName());
+        String ruleName = ruleViolation.getRule().getName();
+        issueDTO.setRuleName(ruleName);
         issueDTO.setMessage(ruleViolation.getDescription());
         issueDTO.setSeverity(Severity.MEDIUM);
+
+        switch (ruleName){
+            case "SystemPrintln":
+                issueDTO.setRule(RuleType.PRINT_STATEMENT);
+                issueDTO.setSuggestion("Use a logger instead of System.out.println");
+                break;
+
+            case "EmptyCatchBlock":
+                issueDTO.setRule(RuleType.EMPTY_CATCH_BLOCK);
+                issueDTO.setSuggestion("Handle or log the exception");
+                break;
+
+            default:
+                issueDTO.setSuggestion("Review and fix this PMD issue");
+        }
         issuesList.add(issueDTO);
     }
 }
