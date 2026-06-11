@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
+
 @RestController
 @RequestMapping("/api/code-review")
 @RequiredArgsConstructor
@@ -19,7 +21,7 @@ public class CodeReviewController {
     private final CodeReviewService codeReviewService;
 
     @PostMapping
-    public ResponseEntity<?> analyseCode(@RequestBody RequestDTO requestDTO){
+    public ResponseEntity<?> analyseCode(@RequestBody RequestDTO requestDTO) throws IOException {
        ResponseDTO responseDTO = codeReviewService.analyseCode(requestDTO);
        return ResponseEntity.status(HttpStatus.OK).body(responseDTO);
     }

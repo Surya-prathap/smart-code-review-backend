@@ -7,6 +7,7 @@ import lombok.Data;
 @Data
 public class IssueDTO {
     private RuleType rule;
+    private String ruleName;
     private String message;
     private String suggestion;
     private Severity severity;

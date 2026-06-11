@@ -5,8 +5,11 @@ import com.smartreview.dto.RequestDTO;
 import com.smartreview.dto.ResponseDTO;
 import com.smartreview.enums.RuleType;
 import com.smartreview.enums.Severity;
+import com.smartreview.pmd.PMDAnalysisService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,12 +17,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
+@RequiredArgsConstructor
 public class CodeReviewService {
 
-    public ResponseDTO analyseCode(RequestDTO requestDTO){
+    private final PMDAnalysisService pmdAnalysisService;
+
+    public ResponseDTO analyseCode(RequestDTO requestDTO) throws IOException {
 
         String code = requestDTO.getCode();
         List<IssueDTO> issuesList = new ArrayList<>();
+
+        issuesList.addAll(pmdAnalysisService.analyzeWithPMD(code));
 
         int score = 100;
         int violatedRulesCount = 0;
