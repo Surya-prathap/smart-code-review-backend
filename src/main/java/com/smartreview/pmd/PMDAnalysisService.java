@@ -65,7 +65,7 @@ public class PMDAnalysisService {
         String ruleName = ruleViolation.getRule().getName();
         issueDTO.setRuleName(ruleName);
         issueDTO.setMessage(ruleViolation.getDescription());
-        issueDTO.setSeverity(Severity.MEDIUM);
+        issueDTO.setSeverity(mapSeverity(ruleViolation));
 
         switch (ruleName){
             case "SystemPrintln":
@@ -82,5 +82,25 @@ public class PMDAnalysisService {
                 issueDTO.setSuggestion("Review and fix this PMD issue");
         }
         issuesList.add(issueDTO);
+    }
+
+    private Severity mapSeverity(RuleViolation ruleViolation){
+        String priorityName = ruleViolation.getRule().getPriority().getName();
+
+        switch (priorityName){
+            case "High":
+            case "Medium High":
+                return Severity.HIGH;
+
+            case "Medium":
+                return Severity.MEDIUM;
+
+            case "Medium Low":
+            case "Low":
+                return Severity.LOW;
+
+            default:
+                return Severity.MEDIUM;
+        }
     }
 }

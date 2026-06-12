@@ -3,9 +3,12 @@ package com.smartreview.service;
 import com.smartreview.dto.IssueDTO;
 import com.smartreview.dto.RequestDTO;
 import com.smartreview.dto.ResponseDTO;
+import com.smartreview.entity.CodeReview;
 import com.smartreview.enums.RuleType;
 import com.smartreview.enums.Severity;
+import com.smartreview.exception.ReviewNotFoundException;
 import com.smartreview.pmd.PMDAnalysisService;
+import com.smartreview.repository.CodeReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +16,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,6 +25,7 @@ import java.util.regex.Pattern;
 public class CodeReviewService {
 
     private final PMDAnalysisService pmdAnalysisService;
+    private final CodeReviewRepository codeReviewRepository;
 
     public ResponseDTO analyseCode(RequestDTO requestDTO) throws IOException {
 
@@ -69,6 +74,16 @@ public class CodeReviewService {
         responseDTO.setNumberOfIssues(issuesList.size());
         responseDTO.setComplexityLevel(complexityLevel);
         responseDTO.setReviewDate(LocalDate.now());
+
+        CodeReview codeReview = new CodeReview();
+
+        codeReview.setCode(code);
+        codeReview.setScore(score);
+        codeReview.setNumberOfIssues(issuesList.size());
+        codeReview.setComplexityLevel(complexityLevel);
+        codeReview.setReviewDate(LocalDate.now());
+
+        codeReviewRepository.save(codeReview);
 
         return responseDTO;
     }
@@ -154,4 +169,11 @@ public class CodeReviewService {
         issuesList.add(issueDTO);
     }
 
+    public List<CodeReview> getAllReviews(){
+       return codeReviewRepository.findAll();
+    }
+
+    public CodeReview getReviewById(Long id){
+        return codeReviewRepository.findById(id).orElseThrow(() -> new ReviewNotFoundException(id));
+    }
 }
