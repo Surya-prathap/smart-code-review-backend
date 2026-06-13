@@ -49,13 +49,17 @@ public class PMDAnalysisService {
             }
 
             @Override
-            public void close() throws Exception {
+            public void close(){
 
             }
         };
 
         pmdAnalysis.addListener(listener);
-        pmdAnalysis.performAnalysis();
+        try{
+            pmdAnalysis.performAnalysis();
+        }finally {
+            Files.deleteIfExists(tempFile);
+        }
 
         return issuesList;
     }
@@ -67,19 +71,58 @@ public class PMDAnalysisService {
         issueDTO.setMessage(ruleViolation.getDescription());
         issueDTO.setSeverity(mapSeverity(ruleViolation));
 
-        switch (ruleName){
+        switch (ruleName) {
+
             case "SystemPrintln":
                 issueDTO.setRule(RuleType.PRINT_STATEMENT);
-                issueDTO.setSuggestion("Use a logger instead of System.out.println");
+                issueDTO.setSuggestion(
+                        "Use a logger instead of System.out.println");
                 break;
 
             case "EmptyCatchBlock":
                 issueDTO.setRule(RuleType.EMPTY_CATCH_BLOCK);
-                issueDTO.setSuggestion("Handle or log the exception");
+                issueDTO.setSuggestion(
+                        "Handle or log the exception");
+                break;
+
+            case "UnusedLocalVariable":
+                issueDTO.setSuggestion(
+                        "Remove the unused variable or use it appropriately");
+                break;
+
+            case "UnusedPrivateField":
+                issueDTO.setSuggestion(
+                        "Remove the unused field or use it appropriately");
+                break;
+
+            case "UnusedFormalParameter":
+                issueDTO.setSuggestion(
+                        "Remove the unused parameter or use it in the method");
+                break;
+
+            case "CommentRequired":
+                issueDTO.setSuggestion(
+                        "Add proper comments or documentation");
+                break;
+
+            case "UnitTestShouldUseTestAnnotation":
+                issueDTO.setSuggestion(
+                        "Use the @Test annotation for test methods");
+                break;
+
+            case "AvoidDuplicateLiterals":
+                issueDTO.setSuggestion(
+                        "Extract repeated literals into constants");
+                break;
+
+            case "ShortVariable":
+                issueDTO.setSuggestion(
+                        "Use meaningful variable names");
                 break;
 
             default:
-                issueDTO.setSuggestion("Review and fix this PMD issue");
+                issueDTO.setSuggestion(
+                        "Review and fix this PMD issue");
         }
         issuesList.add(issueDTO);
     }

@@ -40,9 +40,6 @@ public class CodeReviewService {
         if (checkMethodNamingRule(code,issuesList)){
             violatedRulesCount++;
         }
-        if (checkPrintStatement(code,issuesList)){
-            violatedRulesCount++;
-        }
         if (checkEmptyCatchBlocks(code,issuesList)){
             violatedRulesCount++;
         }
@@ -100,15 +97,6 @@ public class CodeReviewService {
                 violated = true;
                 addIssue(issuesList,RuleType.METHOD_NAMING,"Method name '" +  methodName + "' is too short","Use a meaningful method instead of " + methodName,Severity.LOW);
             }
-        }
-        return violated;
-    }
-
-    private boolean checkPrintStatement(String code,List<IssueDTO> issuesList){
-        boolean violated = false;
-        if (code.contains("System.out.println")){
-            violated = true;
-            addIssue(issuesList,RuleType.PRINT_STATEMENT,"Use of System.out.println detected","Use a logging framework instead of System.out.println",Severity.LOW);
         }
         return violated;
     }
